@@ -20,13 +20,30 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     @GetMapping("/employees")
-    public ResponseEntity<?> getEmployeeList() {
-        try{
-            return new ResponseEntity<>(employeeService.getEmployeeList(), HttpStatus.OK);
-        }
-        catch (Exception ex){
-            return new ResponseEntity<>("Failed!", HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<?> getEmployeeList(
+        @RequestParam(defaultValue = "") String search,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+
+
+        return new ResponseEntity<>(employeeService.getEmployeeList(search, page, size), HttpStatus.OK);
+//        try{
+//
+//        }
+//        catch (Exception ex){
+//            return new ResponseEntity<>("Failed!", HttpStatus.BAD_REQUEST);
+//        }
+    }
+
+    @GetMapping("/employees/search")
+    public ResponseEntity<?> getSearchEmployeeList(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return new ResponseEntity<>(employeeService.getSearchEmployeeList(search, page, size), HttpStatus.OK);
     }
 
     @GetMapping("/employees/{id}")

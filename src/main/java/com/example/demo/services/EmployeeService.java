@@ -4,8 +4,13 @@ import com.example.demo.helpers.CipherHelper;
 import com.example.demo.dao.EmployeeDao;
 import com.example.demo.entities.EmployeeEntity;
 
+import com.example.demo.responses.EmployeeSearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.BadPaddingException;
@@ -16,9 +21,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class EmployeeService {
@@ -30,8 +33,33 @@ public class EmployeeService {
     @Value("${spring.cipher.algorithm}")
     private String algorithm;
 
-    public ArrayList<EmployeeEntity> getEmployeeList() {
-        return (ArrayList<EmployeeEntity>) employeeDao.findAll();
+    public Map getEmployeeList(String search, Integer page, Integer size) {
+        Pageable paging = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.ASC, "id"));
+        Page<EmployeeEntity> pageEmployees = employeeDao.findAll(paging);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data",  pageEmployees.getContent());
+        response.put("currentPage", pageEmployees.getNumber() + 1);
+        response.put("totalItems", pageEmployees.getTotalElements());
+        response.put("totalPages", pageEmployees.getTotalPages());
+
+        return response;
+    }
+
+    public List getSearchEmployeeList(String search, Integer page, Integer size) {
+       return employeeDao.getSearchEmployeeList(search);
+
+
+
+//        Page<EmployeeEntity> pageEmployees = employeeDao.getSearchEmployeeList(paging);
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("data",  pageEmployees.getContent());
+//        response.put("currentPage", pageEmployees.getNumber() + 1);
+//        response.put("totalItems", pageEmployees.getTotalElements());
+//        response.put("totalPages", pageEmployees.getTotalPages());
+//
+//        return response;
     }
 
     public EmployeeEntity getEmployeeDetails(long id) {
