@@ -4,7 +4,7 @@ import com.example.demo.helpers.CipherHelper;
 import com.example.demo.dao.EmployeeDao;
 import com.example.demo.entities.EmployeeEntity;
 
-import com.example.demo.responses.EmployeeSearchResponse;
+import com.example.demo.requests.CreateEmployeeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -17,6 +17,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
+import javax.validation.Valid;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -33,74 +34,74 @@ public class EmployeeService {
     @Value("${spring.cipher.algorithm}")
     private String algorithm;
 
-    public Map getEmployeeList(String search, Integer page, Integer size) {
-        Pageable paging = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.ASC, "id"));
-        Page<EmployeeEntity> pageEmployees = employeeDao.findAll(paging);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("data",  pageEmployees.getContent());
-        response.put("currentPage", pageEmployees.getNumber() + 1);
-        response.put("totalItems", pageEmployees.getTotalElements());
-        response.put("totalPages", pageEmployees.getTotalPages());
-
-        return response;
-    }
-
-    public List getSearchEmployeeList(String search, Integer page, Integer size) {
-       return employeeDao.getSearchEmployeeList(search);
-
-
-
-//        Page<EmployeeEntity> pageEmployees = employeeDao.getSearchEmployeeList(paging);
-//
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("data",  pageEmployees.getContent());
-//        response.put("currentPage", pageEmployees.getNumber() + 1);
-//        response.put("totalItems", pageEmployees.getTotalElements());
-//        response.put("totalPages", pageEmployees.getTotalPages());
-//
-//        return response;
-    }
-
-    public EmployeeEntity getEmployeeDetails(long id) {
-        return employeeDao.findById(id).orElse(null);
-    }
-
-    public EmployeeEntity createEmployee(EmployeeEntity data) {
+    public Page<EmployeeEntity> getEmployeeList(String search, Pageable pageable) {
         try {
-            String password = encryptPassword(data.getPassword());
-            data.setPassword(password);
-
-            return employeeDao.save(data);
+            return employeeDao.getEmployeeList(search, pageable);
         }
         catch(Exception ex){
             return null;
         }
     }
-    public EmployeeEntity updateEmployee(long id, EmployeeEntity data) {
-        Optional<EmployeeEntity> employeeFound = employeeDao.findById(id);
 
-        if (employeeFound.isPresent()) {
-            EmployeeEntity employeeUpdate = employeeFound.get();
-            employeeUpdate.setFirstName(data.getFirstName());
-            employeeUpdate.setMiddleName(data.getMiddleName());
-            employeeUpdate.setLastName(data.getLastName());
-            employeeUpdate.setEmail(data.getEmail());
-
-            return employeeDao.save(data);
+    public EmployeeEntity getEmployeeDetails(long id) {
+        try {
+            return employeeDao.findById(id).orElse(null);
         }
-        else {
+        catch(Exception ex){
             return null;
         }
     }
 
-    public Boolean deleteEmployee(long id) {
+    public EmployeeEntity createEmployee(EmployeeEntity request) {
         try {
-            employeeDao.deleteById(id);
-            return true;
+            String password = encryptPassword(request.getPassword());
+            request.setPassword(password);
+
+            return employeeDao.save(request);
+        }
+        catch(Exception ex){
+            return null;
+        }
+    }
+    public EmployeeEntity updateEmployee(long id, EmployeeEntity request) {
+        try {
+            Optional<EmployeeEntity> employeeFound = employeeDao.findById(id);
+
+            if (employeeFound.isPresent()) {
+                EmployeeEntity employeeUpdate = employeeFound.get();
+                employeeUpdate.setFirstName(request.getFirstName());
+                employeeUpdate.setMiddleName(request.getMiddleName());
+                employeeUpdate.setLastName(request.getLastName());
+                employeeUpdate.setMobile(request.getMobile());
+                employeeUpdate.setEmployeeStatus(request.getEmployeeStatus());
+                employeeUpdate.setStatus(request.getStatus());
+
+                return employeeDao.save(employeeUpdate);
+            }
+            else {
+                return null;
+            }
+        }
+         catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public EmployeeEntity deleteEmployee(long id) {
+        try {
+            Optional<EmployeeEntity> employeeFound = employeeDao.findById(id);
+
+            if (employeeFound.isPresent()) {
+                employeeDao.deleteById(id);
+
+                return employeeFound.get();
+            }
+            else {
+                return null;
+            }
         }
         catch (Exception ex) {
-            return  false;
+            return null;
         }
     }
 
